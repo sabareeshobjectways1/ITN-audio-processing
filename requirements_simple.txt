@@ -1,0 +1,6 @@
+streamlit>=1.28.0
+speechrecognition>=3.9.0
+soundfile>=0.12.0
+numpy>=1.21.0
+requests>=2.25.0
+pyaudio>=0.2.11
