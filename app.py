@@ -721,7 +721,7 @@ def main():
                             
                             # Show original transcription
                             st.subheader("📝 Original Transcription")
-                            st.text_area("", value=transcription, height=100, disabled=True)
+                            st.text_area("Original Transcription", value=transcription, height=100, disabled=True, label_visibility="collapsed")
                             
                             # Step 2: Process ITN
                             with st.spinner("🔍 Processing ITN entities..."):
@@ -761,10 +761,10 @@ def main():
             
             with tab1:
                 st.subheader("Original Transcription")
-                st.text_area("", value=itn_data.get('verbatim_transcription', ''), height=80, disabled=True, key="verbatim_text")
+                st.text_area("Verbatim Transcription", value=itn_data.get('verbatim_transcription', ''), height=80, disabled=True, key="verbatim_text", label_visibility="collapsed")
                 
                 st.subheader("ITN Transcription")
-                st.text_area("", value=itn_data.get('itn_transcription', ''), height=80, disabled=True, key="itn_text")
+                st.text_area("ITN Formatted Transcription", value=itn_data.get('itn_transcription', ''), height=80, disabled=True, key="itn_text", label_visibility="collapsed")
             
             with tab2:
                 if itn_data.get('detected_categories'):
