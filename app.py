@@ -1,17 +1,24 @@
 import streamlit as st
-import speech_recognition as sr
-import soundfile as sf
-import numpy as np
-import json
-import os
-import uuid
-import tempfile
-import io
-import requests
-from datetime import datetime
-from typing import Dict, List, Tuple, Optional
-import re
-import base64
+
+# Add error handling for imports
+try:
+    import speech_recognition as sr
+    import soundfile as sf
+    import numpy as np
+    import json
+    import os
+    import uuid
+    import tempfile
+    import io
+    import requests
+    from datetime import datetime
+    from typing import Dict, List, Tuple, Optional
+    import re
+    import base64
+except ImportError as e:
+    st.error(f"Import error: {e}")
+    st.info("Please check that all required packages are installed.")
+    st.stop()
 
 # Configure page
 st.set_page_config(
