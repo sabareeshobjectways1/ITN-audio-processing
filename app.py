@@ -5,6 +5,7 @@ try:
     import speech_recognition as sr
     import soundfile as sf
     import numpy as np
+    import pandas as pd
     import json
     import os
     import uuid
@@ -29,7 +30,13 @@ st.set_page_config(
 )
 
 # Gemini API Configuration - Using Gemini 2.0 Flash Experimental for best audio transcription
-GEMINI_API_KEY = "AIzaSyCtJ4cwA90mL25n2f-aFUfnOP0t9zEgs7A"
+try:
+    GEMINI_API_KEY = st.secrets["api_keys"]["GEMINI_API_KEY"]
+except (KeyError, FileNotFoundError):
+    st.error("⚠️ Gemini API key not found in secrets. Please add your API key to Streamlit secrets.")
+    st.info("Add your API key in Streamlit Cloud: Settings → Secrets → Add: api_keys.GEMINI_API_KEY = 'your_key'")
+    st.stop()
+
 GEMINI_API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent"
 
 # Language configurations
@@ -627,7 +634,7 @@ def main():
     """Main Streamlit application"""
     
     st.title("🎤 ITN Audio Processor")
-    st.markdown("Upload a .wav file to transcribe and detect ITN entities")
+    st.markdown("Upload .wav files (single or multiple) to transcribe and detect ITN entities")
     st.markdown("---")
     
     # Initialize services
@@ -687,76 +694,264 @@ def main():
     col1, col2 = st.columns([2, 1])
     
     with col1:
-        st.header("📁 Upload Audio File")
+        st.header("📁 Upload Audio Files")
         
-        # File uploader
-        uploaded_file = st.file_uploader(
-            "Choose a .wav file",
-            type=['wav'],
-            help="Upload a .wav audio file for transcription and ITN processing"
+        # File uploader instructions
+        st.info("💡 **Tip**: You can select multiple .wav files at once by holding Ctrl (Windows/Linux) or Cmd (Mac) while clicking files, or drag and drop multiple files here.")
+        
+        # File uploader - Modified for multiple files
+        uploaded_files = st.file_uploader(
+            "Choose .wav files (multiple files supported)",
+            type=['wav', 'WAV'],
+            help="Upload one or more .wav audio files for transcription and ITN processing. Hold Ctrl/Cmd to select multiple files.",
+            accept_multiple_files=True,
+            key="audio_files_uploader"
         )
         
-        if uploaded_file is not None:
-            # Show file details
-            file_details = {
-                "Filename": uploaded_file.name,
-                "File size": f"{uploaded_file.size / 1024:.1f} KB"
-            }
+        if uploaded_files:
+            # Display file count and total size
+            total_size = sum(file.size for file in uploaded_files)
+            st.success(f"✅ **{len(uploaded_files)} file(s) selected** | Total size: {total_size / 1024:.1f} KB")
             
-            st.subheader("📄 File Details")
-            for key, value in file_details.items():
-                st.write(f"**{key}:** {value}")
-            
-            # Save and validate the file
-            temp_file_path = save_audio_file(uploaded_file)
-            
-            if temp_file_path and validate_audio_file(temp_file_path):
+            # Show file details for all files
+            if len(uploaded_files) == 1:
+                # Single file - show detailed info
+                uploaded_file = uploaded_files[0]
+                file_details = {
+                    "Filename": uploaded_file.name,
+                    "File size": f"{uploaded_file.size / 1024:.1f} KB"
+                }
                 
-                # Audio player
+                st.subheader("📄 File Details")
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.write(f"**Filename:** {file_details['Filename']}")
+                with col2:
+                    st.write(f"**File size:** {file_details['File size']}")
+                
+                # Audio player for single file
                 st.subheader("🔊 Audio Player")
                 st.audio(uploaded_file, format='audio/wav')
                 
-                # Process button
-                if st.button("🚀 Process Audio", type="primary", use_container_width=True):
-                    
-                    with st.spinner("🎯 Transcribing audio..."):
-                        # Step 1: Transcribe audio
-                        transcription = transcriber.transcribe_audio_file(temp_file_path, selected_language)
-                        
-                        if "error" not in transcription.lower():
-                            st.success("✅ Transcription completed!")
-                            
-                            # Show original transcription
-                            st.subheader("📝 Original Transcription")
-                            st.text_area("Original Transcription", value=transcription, height=100, disabled=True, label_visibility="collapsed")
-                            
-                            # Step 2: Process ITN
-                            with st.spinner("🔍 Processing ITN entities..."):
-                                itn_result = itn_processor.process_itn(transcription, selected_language)
-                                
-                                # Store results in session state
-                                st.session_state.processing_result = {
-                                    'original_transcription': transcription,
-                                    'itn_result': itn_result,
-                                    'file_name': uploaded_file.name,
-                                    'language': selected_language,
-                                    'timestamp': datetime.now().isoformat()
-                                }
-                                
-                                st.success("✅ ITN processing completed!")
-                                st.rerun()
-                        else:
-                            st.error(f"❌ Transcription failed: {transcription}")
+            else:
+                # Multiple files - show summary table
+                st.subheader(f"📄 Selected Files ({len(uploaded_files)})")
                 
-                # Clean up temporary file
-                try:
-                    if os.path.exists(temp_file_path):
-                        os.remove(temp_file_path)
-                except:
-                    pass
+                file_data = []
+                for i, uploaded_file in enumerate(uploaded_files, 1):
+                    file_data.append({
+                        "#": i,
+                        "Filename": uploaded_file.name,
+                        "Size (KB)": f"{uploaded_file.size / 1024:.1f}",
+                        "Status": "Ready ✅"
+                    })
+                
+                # Display as a table
+                import pandas as pd
+                df = pd.DataFrame(file_data)
+                st.dataframe(df, use_container_width=True, hide_index=True)
+                
+                # Option to preview individual files
+                with st.expander("🔊 Preview Individual Files"):
+                    selected_preview = st.selectbox(
+                        "Select a file to preview:",
+                        options=range(len(uploaded_files)),
+                        format_func=lambda x: uploaded_files[x].name,
+                        key="preview_selector"
+                    )
+                    if selected_preview is not None:
+                        st.audio(uploaded_files[selected_preview], format='audio/wav')
+            
+            # File validation warnings
+            large_files = [f for f in uploaded_files if f.size > 5 * 1024 * 1024]  # 5MB
+            if large_files:
+                st.warning(f"⚠️ **Large files detected**: {len(large_files)} file(s) are larger than 5MB. Processing may take longer.")
+            
+            if len(uploaded_files) > 10:
+                st.warning(f"⚠️ **Many files selected**: {len(uploaded_files)} files. Consider processing in smaller batches for better performance.")
+            
+            # Process all files button
+            if st.button("🚀 Process All Audio Files", type="primary", use_container_width=True):
+                
+                # Initialize session state for batch results
+                if 'batch_results' not in st.session_state:
+                    st.session_state.batch_results = []
+                
+                st.session_state.batch_results = []  # Clear previous results
+                
+                progress_bar = st.progress(0)
+                status_text = st.empty()
+                
+                for idx, uploaded_file in enumerate(uploaded_files):
+                    progress = (idx + 1) / len(uploaded_files)
+                    progress_bar.progress(progress)
+                    status_text.text(f"Processing file {idx + 1}/{len(uploaded_files)}: {uploaded_file.name}")
+                    
+                    # Save and validate the file
+                    temp_file_path = save_audio_file(uploaded_file)
+                    
+                    if temp_file_path and validate_audio_file(temp_file_path):
+                        
+                        with st.spinner(f"🎯 Transcribing {uploaded_file.name}..."):
+                            # Step 1: Transcribe audio
+                            transcription = transcriber.transcribe_audio_file(temp_file_path, selected_language)
+                            
+                            if "error" not in transcription.lower():
+                                # Step 2: Process ITN
+                                with st.spinner(f"🔍 Processing ITN entities for {uploaded_file.name}..."):
+                                    itn_result = itn_processor.process_itn(transcription, selected_language)
+                                    
+                                    # Store individual result
+                                    file_result = {
+                                        'file_name': uploaded_file.name,
+                                        'original_transcription': transcription,
+                                        'itn_result': itn_result,
+                                        'language': selected_language,
+                                        'timestamp': datetime.now().isoformat(),
+                                        'status': 'success'
+                                    }
+                                    st.session_state.batch_results.append(file_result)
+                            else:
+                                # Store error result
+                                file_result = {
+                                    'file_name': uploaded_file.name,
+                                    'error': transcription,
+                                    'language': selected_language,
+                                    'timestamp': datetime.now().isoformat(),
+                                    'status': 'error'
+                                }
+                                st.session_state.batch_results.append(file_result)
+                    else:
+                        # Store validation error
+                        file_result = {
+                            'file_name': uploaded_file.name,
+                            'error': 'File validation failed',
+                            'language': selected_language,
+                            'timestamp': datetime.now().isoformat(),
+                            'status': 'error'
+                        }
+                        st.session_state.batch_results.append(file_result)
+                    
+                    # Clean up temporary file
+                    try:
+                        if temp_file_path and os.path.exists(temp_file_path):
+                            os.remove(temp_file_path)
+                    except:
+                        pass
+                
+                progress_bar.progress(1.0)
+                status_text.text("✅ All files processed!")
+                st.success(f"✅ Batch processing completed! Processed {len(uploaded_files)} files.")
+                st.rerun()
         
-        # Display results if available
-        if 'processing_result' in st.session_state:
+        # Display batch results if available
+        if 'batch_results' in st.session_state and st.session_state.batch_results:
+            st.markdown("---")
+            st.header("🎯 Batch Processing Results")
+            
+            # Summary statistics
+            total_files = len(st.session_state.batch_results)
+            successful_files = len([r for r in st.session_state.batch_results if r.get('status') == 'success'])
+            failed_files = total_files - successful_files
+            
+            col_stats1, col_stats2, col_stats3 = st.columns(3)
+            with col_stats1:
+                st.metric("Total Files", total_files)
+            with col_stats2:
+                st.metric("Successful", successful_files)
+            with col_stats3:
+                st.metric("Failed", failed_files)
+            
+            # Results tabs
+            tab1, tab2, tab3 = st.tabs(["📝 Individual Results", "📦 Bulk Download", "❌ Failed Files"])
+            
+            with tab1:
+                st.subheader("Individual File Results")
+                
+                for idx, result in enumerate(st.session_state.batch_results):
+                    if result.get('status') == 'success':
+                        with st.expander(f"✅ {result['file_name']} - Success"):
+                            itn_data = result['itn_result']
+                            
+                            # Individual file transcriptions
+                            st.write("**Original Transcription:**")
+                            st.text_area(f"Original {idx}", value=itn_data.get('verbatim_transcription', ''), 
+                                       height=60, disabled=True, key=f"orig_{idx}", label_visibility="collapsed")
+                            
+                            st.write("**ITN Transcription:**")
+                            st.text_area(f"ITN {idx}", value=itn_data.get('itn_transcription', ''), 
+                                       height=60, disabled=True, key=f"itn_{idx}", label_visibility="collapsed")
+                            
+                            # Individual JSON download
+                            individual_json = {
+                                "verbatim_transcription": itn_data.get('verbatim_transcription', ''),
+                                "itn_transcription": itn_data.get('itn_transcription', '')
+                            }
+                            json_str = json.dumps(individual_json, indent=2, ensure_ascii=False)
+                            
+                            # Generate filename: filename.json
+                            base_name = result['file_name'].replace('.wav', '').replace('.WAV', '')
+                            download_filename = f"{base_name}.json"
+                            
+                            st.download_button(
+                                label="📥 Download JSON",
+                                data=json_str,
+                                file_name=download_filename,
+                                mime="application/json",
+                                key=f"download_{idx}",
+                                use_container_width=True
+                            )
+                            
+                            # Show detected categories
+                            if itn_data.get('detected_categories'):
+                                st.write("**Detected Categories:**")
+                                categories_str = ", ".join(itn_data['detected_categories'])
+                                st.info(categories_str)
+            
+            with tab2:
+                st.subheader("Bulk Download Options")
+                
+                if successful_files > 0:
+                    # Create combined JSON for all successful files
+                    bulk_results = []
+                    for result in st.session_state.batch_results:
+                        if result.get('status') == 'success':
+                            itn_data = result['itn_result']
+                            bulk_results.append({
+                                "file_name": result['file_name'],
+                                "verbatim_transcription": itn_data.get('verbatim_transcription', ''),
+                                "itn_transcription": itn_data.get('itn_transcription', ''),
+                                "detected_categories": itn_data.get('detected_categories', []),
+                                "confidence": itn_data.get('confidence', 'unknown'),
+                                "timestamp": result['timestamp']
+                            })
+                    
+                    bulk_json_str = json.dumps(bulk_results, indent=2, ensure_ascii=False)
+                    
+                    st.download_button(
+                        label="📦 Download All Results (Combined JSON)",
+                        data=bulk_json_str,
+                        file_name="bulk_results.json",
+                        mime="application/json",
+                        use_container_width=True
+                    )
+                    
+                    # Create individual ZIP file with separate JSONs
+                    st.info("💡 Individual JSON files are available in the 'Individual Results' tab above.")
+                else:
+                    st.warning("No successful transcriptions to download.")
+            
+            with tab3:
+                if failed_files > 0:
+                    st.subheader("Failed Files")
+                    for result in st.session_state.batch_results:
+                        if result.get('status') == 'error':
+                            st.error(f"❌ **{result['file_name']}**: {result.get('error', 'Unknown error')}")
+                else:
+                    st.success("🎉 All files processed successfully!")
+        
+        # Display single file results (legacy support)
+        elif 'processing_result' in st.session_state:
             result = st.session_state.processing_result
             itn_data = result['itn_result']
             
@@ -806,11 +1001,14 @@ def main():
                 json_str = json.dumps(final_json, indent=2, ensure_ascii=False)
                 st.code(json_str, language='json')
                 
-                # Download button
+                # Download button with updated filename
+                base_name = result['file_name'].replace('.wav', '').replace('.WAV', '')
+                download_filename = f"{base_name}.json"
+                
                 st.download_button(
                     label="📥 Download JSON",
                     data=json_str,
-                    file_name=f"itn_output_{result['file_name'].replace('.wav', '')}.json",
+                    file_name=download_filename,
                     mime="application/json",
                     use_container_width=True
                 )
@@ -818,7 +1016,49 @@ def main():
     with col2:
         st.header("📊 Summary")
         
-        if 'processing_result' in st.session_state:
+        # Handle batch results
+        if 'batch_results' in st.session_state and st.session_state.batch_results:
+            successful_results = [r for r in st.session_state.batch_results if r.get('status') == 'success']
+            
+            if successful_results:
+                st.subheader("📁 Batch Information")
+                st.write(f"**Total Files:** {len(st.session_state.batch_results)}")
+                st.write(f"**Successful:** {len(successful_results)}")
+                st.write(f"**Failed:** {len(st.session_state.batch_results) - len(successful_results)}")
+                
+                # Get latest processing info
+                latest_result = successful_results[-1] if successful_results else None
+                if latest_result:
+                    st.write(f"**Language:** {LANGUAGES[latest_result['language']]}")
+                    st.write(f"**Last Processed:** {latest_result['timestamp'][:19]}")
+                
+                # Aggregate statistics
+                st.subheader("📈 Aggregate Statistics")
+                total_words = 0
+                total_chars = 0
+                all_categories = set()
+                
+                for result in successful_results:
+                    if result.get('itn_result'):
+                        transcription = result['itn_result'].get('verbatim_transcription', '')
+                        if transcription:
+                            total_words += len(transcription.split())
+                            total_chars += len(transcription)
+                        
+                        categories = result['itn_result'].get('detected_categories', [])
+                        all_categories.update(categories)
+                
+                st.metric("Total Words", total_words)
+                st.metric("Total Characters", total_chars)
+                st.metric("Unique ITN Categories", len(all_categories))
+                
+                if all_categories:
+                    st.write("**Found Categories:**")
+                    for category in sorted(all_categories):
+                        st.write(f"• {category}")
+        
+        # Handle single file results (legacy)
+        elif 'processing_result' in st.session_state:
             result = st.session_state.processing_result
             
             # File info
@@ -845,7 +1085,7 @@ def main():
             st.write(f"**Quality:** {confidence.title()}")
             
         else:
-            st.info("👆 Upload and process an audio file to see results")
+            st.info("👆 Upload and process audio files to see results")
             
             # Example section
             st.subheader("📝 ITN Examples")
@@ -866,10 +1106,13 @@ def main():
 }''', language='json')
         
         # Clear results button
-        if 'processing_result' in st.session_state:
+        if ('batch_results' in st.session_state and st.session_state.batch_results) or 'processing_result' in st.session_state:
             st.markdown("---")
-            if st.button("🗑️ Clear Results", use_container_width=True):
-                del st.session_state.processing_result
+            if st.button("🗑️ Clear All Results", use_container_width=True):
+                if 'batch_results' in st.session_state:
+                    del st.session_state.batch_results
+                if 'processing_result' in st.session_state:
+                    del st.session_state.processing_result
                 st.rerun()
     
     # Footer
