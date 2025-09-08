@@ -1,0 +1,28 @@
+{
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.802.0",
+    "dotenv": "^16.6.1",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "multer": "^2.0.2",
+    "node-fetch": "^3.3.2",
+    "node-wav": "^0.0.2",
+    "pug": "^3.0.3",
+    "wav": "^1.0.2"
+  },
+  "name": "audio",
+  "version": "1.0.0",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "concurrently \"node server.js\" \"python app_uvicorn.py\"",
+    "setup": "npm install && pip install -r requirements.txt"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}

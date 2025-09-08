@@ -1,0 +1,169 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f2f2f2;
+    margin: 0;
+    padding: 0;
+  }
+  .container {
+    width: 300px;
+    margin: 100px auto;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  }
+  h2 {
+    text-align: center;
+    margin-bottom: 20px;
+  }
+  form {
+    display: flex;
+    flex-direction: column;
+  }
+  label {
+    margin-bottom: 5px;
+  }
+  input,
+  button {
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+  button {
+    background-color: #4caf50;
+    color: white;
+    border: none;
+    cursor: pointer;
+  }
+  button:hover {
+    background-color: #45a049;
+  }
+  .error {
+    color: red;
+    text-align: center;
+    margin-bottom: 10px;
+  }
+
+/* ITN Display Styling */
+.itn-text-raw {
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 4px;
+    padding: 10px;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    color: #495057;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    margin: 5px 0;
+}
+
+.itn-text {
+    background-color: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 4px;
+    padding: 10px;
+    margin: 5px 0;
+    line-height: 1.6;
+}
+
+.itn-tag {
+    background-color: #007bff;
+    color: white;
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: bold;
+    margin-right: 2px;
+    display: inline-block;
+}
+
+.itn-content {
+    background-color: #e3f2fd;
+    padding: 2px 4px;
+    border-radius: 3px;
+    margin-right: 4px;
+    font-weight: 500;
+}
+
+.original-text {
+    background-color: #fff3cd;
+    border: 1px solid #ffeaa7;
+    border-radius: 4px;
+    padding: 8px;
+    margin: 5px 0;
+    font-weight: 500;
+}
+
+.verbatim-text {
+    background-color: #d1ecf1;
+    border: 1px solid #bee5eb;
+    border-radius: 4px;
+    padding: 8px;
+    margin: 5px 0;
+}
+
+.transcription-section {
+    margin: 15px 0;
+}
+
+.transcription-section h6 {
+    color: #343a40;
+    margin-bottom: 10px;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+/* WER Display Styling */
+.wer-good {
+    background-color: #d4edda;
+    border: 1px solid #c3e6cb;
+    color: #155724;
+    padding: 15px;
+    border-radius: 6px;
+    margin: 10px 0;
+}
+
+.wer-bad {
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    color: #721c24;
+    padding: 15px;
+    border-radius: 6px;
+    margin: 10px 0;
+}
+
+.wer-good h6, .wer-bad h6 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.wer-good p, .wer-bad p {
+    margin: 0;
+    font-size: 14px;
+}
+
+/* Hidden utility class */
+.hidden {
+    display: none !important;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+    .container {
+        width: 90%;
+        margin: 20px auto;
+        padding: 15px;
+    }
+    
+    .itn-text-raw {
+        font-size: 11px;
+        padding: 8px;
+    }
+    
+    .itn-tag {
+        font-size: 10px;
+        padding: 1px 4px;
+    }
+}
+  

@@ -1,0 +1,790 @@
+doctype html
+head
+  meta(name='viewport' content='width=device-width,initial-scale=1')
+  title Enhanced ASR Medical Tool - Audio Recording & WER Analysis
+  script(src='https://code.jquery.com/jquery-3.4.1.min.js' integrity='sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=' crossorigin='anonymous')
+  link(rel='stylesheet' href='https://code.jquery.com/ui/1.12.0/themes/smoothness/jquery-ui.css')
+  link(rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css')
+  link(rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css' integrity='sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh' crossorigin='anonymous')
+  script(src='https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js' integrity='sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo' crossorigin='anonymous')
+  script(src='https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js' integrity='sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6' crossorigin='anonymous')
+  script(src='/mainFunction/audiodisplay.js')
+  script(src='/mainFunction/recorderjs/recorder.js')
+  script(src='/mainFunction/medical-recorder-enhanced.js')
+  style.
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f8f9fa;
+      padding-top: 20px;
+    }
+    .recording-section {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 30px;
+      margin-bottom: 20px;
+    }
+    .waveform-container {
+      background: #f8f9fa;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    canvas {
+      background: #ffffff;
+      width: 100%;
+      height: 120px;
+      border-radius: 5px;
+      border: 1px solid #dee2e6;
+    }
+    .audio-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 15px;
+      margin: 20px 0;
+    }
+    .control-btn {
+      min-width: 140px;
+      height: 50px;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 16px;
+      border: none;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+      cursor: pointer;
+    }
+    .control-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    }
+    .control-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .record-btn {
+      background: linear-gradient(135deg, #28a745, #20c997);
+      color: white;
+    }
+    .record-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, #218838, #1ba085);
+    }
+    .record-btn.recording {
+      background: linear-gradient(135deg, #dc3545, #c82333);
+      animation: pulse 1.5s ease-in-out infinite alternate;
+    }
+    .pause-btn {
+      background: linear-gradient(135deg, #ffc107, #e0a800);
+      color: #212529;
+    }
+    .pause-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, #e0a800, #d39e00);
+    }
+    .stop-btn {
+      background: linear-gradient(135deg, #6c757d, #5a6268);
+      color: white;
+    }
+    .stop-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, #5a6268, #495057);
+    }
+    .listen-btn {
+      background: linear-gradient(135deg, #17a2b8, #138496);
+      color: white;
+    }
+    .listen-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, #138496, #117a8b);
+    }
+    .submit-btn {
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      color: white;
+    }
+    .submit-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, #0056b3, #004085);
+    }
+    .submit-btn.loading {
+      background: linear-gradient(135deg, #6c757d, #5a6268);
+      cursor: not-allowed;
+      position: relative;
+    }
+    .submit-btn.loading i {
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    .rerecord-btn {
+      background: linear-gradient(135deg, #fd7e14, #e8690b);
+      color: white;
+    }
+    .rerecord-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, #e8690b, #d35400);
+    }
+    .confirm-btn {
+      background: linear-gradient(135deg, #28a745, #20c997);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 20px;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.12);
+      max-width: 250px;
+      margin: 0 auto;
+    }
+    .confirm-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, #218838, #1ba085);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.16);
+    }
+    .btn-warning.confirm-btn {
+      background: linear-gradient(135deg, #fd7e14, #e8690b);
+    }
+    .btn-warning.confirm-btn:hover:not(:disabled) {
+      background: linear-gradient(135deg, #e8690b, #d35400);
+    }
+    @keyframes pulse {
+      from {
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+      }
+      to {
+        box-shadow: 0 0 0 20px rgba(220, 53, 69, 0);
+      }
+    }
+    .timer-display {
+      font-size: 24px;
+      font-weight: bold;
+      color: #495057;
+      text-align: center;
+      margin: 10px 0;
+    }
+    .form-section {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      padding: 25px;
+    }
+    .content-section {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      padding: 25px;
+      border-left: 4px solid #007bff;
+    }
+    .content-header h5 {
+      color: #007bff;
+      font-weight: 600;
+      margin-bottom: 15px;
+    }
+    .content-text {
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1.6;
+      color: #212529;
+      background: #f8f9fa;
+      padding: 25px;
+      border-radius: 8px;
+      border: 2px solid #e9ecef;
+      margin-top: 10px;
+      text-align: center;
+      letter-spacing: 0.3px;
+    }
+    .content-placeholder {
+      text-align: center;
+      color: #6c757d;
+      font-style: italic;
+      padding: 40px 20px;
+    }
+    .completion-screen {
+      text-align: center;
+      padding: 40px 20px;
+      background: linear-gradient(135deg, #e8f5e8, #f0fff0);
+      border-radius: 15px;
+      border: 2px solid #28a745;
+    }
+    .completion-screen i {
+      animation: checkmark 0.6s ease-in-out;
+    }
+    @keyframes checkmark {
+      0% { transform: scale(0); }
+      50% { transform: scale(1.2); }
+      100% { transform: scale(1); }
+    }
+    .hidden {
+      display: none !important;
+    }
+    .disabled-section {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+    .disabled-section .control-btn {
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+    #ageGroup {
+      background-color: #f8f9fa !important;
+      color: #6c757d !important;
+      cursor: not-allowed !important;
+      pointer-events: none;
+      border-color: #e9ecef !important;
+    }
+    .wer-display {
+      background: #f8f9fa;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 15px 0;
+      text-align: center;
+    }
+    .wer-good {
+      border-color: #28a745;
+      background: #d4edda;
+      color: #155724;
+    }
+    .wer-bad {
+      border-color: #dc3545;
+      background: #f8d7da;
+      color: #721c24;
+    }
+    .transcription-display {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+      padding: 15px;
+      margin: 10px 0;
+      font-family: monospace;
+      font-size: 14px;
+    }
+    .upload-mode-section {
+      background: #e3f2fd;
+      border: 1px solid #2196f3;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 15px 0;
+    }
+    .file-upload-area {
+      border: 2px dashed #007bff;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      margin: 15px 0;
+      background: #f8f9fa;
+    }
+    .file-upload-area.dragover {
+      border-color: #28a745;
+      background: #d4edda;
+    }
+    
+    /* Audio Playback Section Styling */
+    .audio-playback-section {
+      background: #f8f9fa;
+      border: 2px solid #e9ecef;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    
+    .audio-player-container {
+      margin-bottom: 15px;
+    }
+    
+    .seek-controls {
+      margin: 15px 0;
+    }
+    
+    .seek-controls-wrapper {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    
+    .seek-btn {
+      background: linear-gradient(135deg, #6c757d, #5a6268);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      min-width: 60px;
+    }
+    
+    .seek-btn:hover {
+      background: linear-gradient(135deg, #5a6268, #495057);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+    }
+    
+    .seek-btn i {
+      margin-right: 3px;
+    }
+    
+    /* Transcription Progress - Simple Text Display */
+    .transcription-progress {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      padding: 20px;
+      margin: 15px 0;
+      text-align: center;
+    }
+    
+    .transcription-progress .fa-spinner {
+      color: #007bff;
+      margin-right: 10px;
+    }
+    
+    /* ITN Tags Styling */
+    .itn-tag {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 4px;
+      padding: 2px 6px;
+      font-weight: bold;
+      color: #856404;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    
+    .itn-content {
+      background: #d1ecf1;
+      border: 1px solid #bee5eb;
+      border-radius: 4px;
+      padding: 2px 4px;
+      color: #0c5460;
+      font-weight: bold;
+    }
+    
+    // Responsive design for mobile and tablet
+    @media (max-width: 768px) {
+      .container-fluid {
+        padding: 10px;
+      }
+      
+      .col-md-4, .col-md-8 {
+        margin-bottom: 20px;
+      }
+      
+      .audio-controls {
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .control-btn {
+        min-width: 120px;
+        height: 45px;
+        font-size: 14px;
+      }
+      
+      .content-text {
+        font-size: 16px;
+        padding: 15px;
+      }
+      
+      .waveform-container {
+        padding: 15px;
+      }
+      
+      canvas {
+        height: 80px;
+      }
+      
+      .form-section, .content-section, .recording-section {
+        padding: 20px;
+        margin-bottom: 15px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .control-btn {
+        min-width: 100px;
+        height: 40px;
+        font-size: 12px;
+      }
+      
+      .content-text {
+        font-size: 14px;
+        padding: 10px;
+      }
+      
+      .timer-display {
+        font-size: 20px;
+      }
+      
+      .form-section, .content-section, .recording-section {
+        padding: 15px;
+      }
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .container-fluid {
+        padding: 10px;
+      }
+      .col-md-4, .col-md-8 {
+        margin-bottom: 20px;
+      }
+      .audio-controls {
+        flex-direction: column;
+        gap: 10px;
+      }
+      .control-btn {
+        min-width: 100%;
+        margin: 5px 0;
+      }
+      .content-text {
+        font-size: 16px;
+        padding: 15px;
+      }
+      .waveform-container {
+        padding: 10px;
+      }
+      canvas {
+        height: 80px;
+      }
+      .form-section, .content-section {
+        padding: 15px;
+      }
+      .seek-controls-wrapper {
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+      .seek-btn {
+        min-width: 50px;
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+      .navigation-buttons {
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+      }
+    }
+    
+    @media (max-width: 480px) {
+      .content-text {
+        font-size: 14px;
+        padding: 10px;
+      }
+      .timer-display {
+        font-size: 18px;
+      }
+      .control-btn {
+        height: 40px;
+        font-size: 14px;
+      }
+      .recording-section {
+        padding: 15px;
+      }
+      .seek-btn {
+        min-width: 45px;
+        padding: 5px 8px;
+        font-size: 10px;
+      }
+      .transcription-section {
+        padding: 10px;
+      }
+      .original-text, .verbatim-text, .itn-text {
+        font-size: 12px;
+        padding: 6px;
+      }
+    }
+    
+    /* Transcription results styling */
+    .transcription-section {
+      background: #f8f9fa;
+      border: 1px solid #dee2e6;
+      border-radius: 5px;
+      padding: 15px;
+      margin: 10px 0;
+    }
+    
+    .original-text, .verbatim-text, .itn-text {
+      background: #ffffff;
+      border: 1px solid #e9ecef;
+      border-radius: 3px;
+      padding: 8px;
+      margin: 5px 0;
+      font-family: monospace;
+      font-size: 13px;
+    }
+    
+    .original-text {
+      border-left: 4px solid #007bff;
+    }
+    
+    .verbatim-text {
+      border-left: 4px solid #28a745;
+    }
+    
+    .itn-text {
+      border-left: 4px solid #ffc107;
+    }
+    
+    .uploaded-audio-info {
+      background: #e3f2fd;
+      border: 1px solid #2196f3;
+      border-radius: 8px;
+      padding: 15px;
+      margin: 10px 0;
+    }
+    
+    .sentence-navigation {
+      margin: 10px 0;
+      text-align: center;
+    }
+    
+    .current-sentence-info {
+      display: block;
+      margin-bottom: 10px;
+      font-weight: bold;
+      color: #495057;
+    }
+    
+    .navigation-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+    }
+    
+    @media (max-width: 480px) {
+      .navigation-buttons {
+        flex-direction: column;
+        align-items: center;
+      }
+    }
+    
+    // Category badge styles
+    .category-badge {
+      font-size: 0.875rem;
+      font-weight: 600;
+      padding: 0.375rem 0.75rem;
+      border-radius: 0.5rem;
+    }
+    .category-address { background-color: #28a745; color: white; }
+    .category-num { background-color: #007bff; color: white; }
+    .category-phone { background-color: #fd7e14; color: white; }
+    .category-serial { background-color: #6f42c1; color: white; }
+    .category-currency { background-color: #20c997; color: white; }
+    .category-date { background-color: #e83e8c; color: white; }
+    .category-time { background-color: #ffc107; color: black; }
+    .category-unit { background-color: #6c757d; color: white; }
+    .category-url { background-color: #17a2b8; color: white; }
+    .category-other { background-color: #f8f9fa; color: #6c757d; border: 1px solid #dee2e6; }
+    
+    .sentence-display {
+      font-size: 1.25rem;
+      font-weight: 500;
+      line-height: 1.6;
+      color: #212529;
+      background: #f8f9fa;
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      border: 2px solid #e9ecef;
+      margin-top: 1rem;
+      text-align: center;
+    }
+
+body
+  .container-fluid
+    .row
+      .col-md-4
+        .form-section
+          h4.mb-3 Speaker Information
+          #speakerFormContainer
+            form#speakerForm
+              .form-group
+                label(for='speakerId') Speaker ID *
+                input#speakerId.form-control(type='text' required placeholder='Enter Speaker ID')
+              
+              .form-group
+                label(for='speakerCode') Code *
+                input#speakerCode.form-control(type='text' required placeholder='Will auto-update based on content' readonly disabled)
+              
+              .form-group
+                label(for='speakerName') Name *
+                input#speakerName.form-control(type='text' required placeholder='Enter Full Name')
+              
+              .form-group
+                label(for='speakerGender') Gender *
+                select#speakerGender.form-control(required)
+                  option(value='') Select Gender
+                  option(value='Male') Male
+                  option(value='Female') Female
+              
+              .form-group
+                label(for='speakerAge') Age *
+                input#speakerAge.form-control(type='number' required min='18' max='100' placeholder='Enter Age')
+              
+              .form-group
+                label(for='ageGroup') Age Group *
+                select#ageGroup.form-control(required disabled readonly)
+                  option(value='') Will auto-update based on age
+                  option(value='18-30') 18-30
+                  option(value='30-45') 30-45
+                  option(value='45-60') 45-60
+                  option(value='60+') 60+
+              
+              .form-group
+                label(for='language') Language *
+                select#language.form-control(required)
+                  option(value='') Select Language
+                  option(value='en-US') English (US)
+                  option(value='en-GB') English (UK)
+                  option(value='en-AU') English (Australia)
+                  option(value='en-CA') English (Canada)
+                  option(value='zh-HK') Cantonese (Hong Kong)
+                  option(value='yue-CN') Cantonese (Mainland China)
+                  option(value='zh-CN') Mandarin (China)
+                  option(value='zh-TW') Mandarin (Taiwan)
+                  option(value='es-US') Spanish (USA)
+                  option(value='es-ES') Spanish (Spain)
+                  option(value='es-MX') Spanish (Mexico)
+                  option(value='es-AR') Spanish (Argentina)
+                  option(value='fr-FR') French (France)
+                  option(value='fr-CA') French (Canada)
+                  option(value='de-DE') German (Germany)
+                  option(value='de-AT') German (Austria)
+                  option(value='it-IT') Italian (Italy)
+                  option(value='pt-BR') Portuguese (Brazil)
+                  option(value='pt-PT') Portuguese (Portugal)
+                  option(value='ja-JP') Japanese (Japan)
+                  option(value='ko-KR') Korean (South Korea)
+                  option(value='ar-SA') Arabic (Saudi Arabia)
+                  option(value='hi-IN') Hindi (India)
+                  option(value='th-TH') Thai (Thailand)
+                  option(value='vi-VN') Vietnamese (Vietnam)
+                  option(value='pl-PL') Polish (Poland)
+                  option(value='nl-NL') Dutch (Netherlands)
+                  option(value='sv-SE') Swedish (Sweden)
+                  option(value='da-DK') Danish (Denmark)
+                  option(value='no-NO') Norwegian (Norway)
+                  option(value='fi-FI') Finnish (Finland)
+                  option(value='ru-RU') Russian (Russia)
+                  option(value='tr-TR') Turkish (Turkey)
+                  option(value='he-IL') Hebrew (Israel)
+                  option(value='id-ID') Indonesian (Indonesia)
+              
+              .form-group
+                label(for='languageCode') Language Code *
+                input#languageCode.form-control(type='text' readonly placeholder='Auto-filled based on language selection')
+              
+              .upload-mode-section
+                .form-check
+                  input#uploadMode.form-check-input(type='checkbox')
+                  label.form-check-label(for='uploadMode')
+                    strong Upload Audio for Analysis
+                    br
+                    small.text-muted If checked: Upload WAV file for analysis. If unchecked: Record and transcribe audio with WER calculation.
+              
+              .form-group.mt-3.text-center
+                button#confirmSpeakerBtn.btn.btn-success.confirm-btn(type='button')
+                  i.fa.fa-check
+                  |  Confirm Speaker Information
+
+      .col-md-8
+        // Content Display Section
+        .content-section#contentSection.mb-4
+          .content-header.d-flex.justify-content-between.align-items-center
+            h5 Content to Record
+            .content-info#contentInfo.text-muted
+              span#currentSentenceInfo Sentence 1 of 27
+              span.mx-2 -
+              span#currentCategory.category-badge.category-other Category: Not analyzed
+          
+          .sentence-navigation.hidden#sentenceNavigation
+            .navigation-controls.d-flex.justify-content-center.align-items-center.mb-3
+              button.btn.btn-outline-primary.btn-sm#prevSentenceBtn(disabled) 
+                i.fa.fa-arrow-left
+                |  Previous
+              button.btn.btn-outline-primary.btn-sm#nextSentenceBtn.ml-2
+                |  Next 
+                i.fa.fa-arrow-right
+          .content-placeholder#contentPlaceholder
+            p Please select a language and confirm speaker information to see the content.
+          .content-text.hidden#sentenceContent
+            .sentence-display#sentenceText
+              | Select a language to see content        // Audio Display Section for uploaded files
+        .content-section#uploadedAudioSection.hidden.mb-4
+          .content-header
+            h5 Uploaded Audio Content
+          #uploadedAudioPlayer
+          #uploadedAudioTranscription.transcription-display.hidden
+        
+        // WER Display Section
+        #werDisplaySection.wer-display.hidden
+          h6 Word Error Rate (WER) Analysis
+          #werResult
+          #transcriptionResult.transcription-display.hidden
+        
+        .recording-section#recordingSection.disabled-section
+          
+          // File Upload Area (hidden by default)
+          .file-upload-area#fileUploadArea.hidden
+            i.fa.fa-cloud-upload(style='font-size: 48px; color: #007bff; margin-bottom: 15px;')
+            h5 Upload WAV File
+            p Drag and drop your WAV file here or click to browse
+            input#audioFileInput(type='file' accept='.wav' style='display: none;')
+            button#browseFileBtn.btn.btn-primary(type='button') Browse Files
+          
+          .waveform-container#waveformContainer
+            canvas#waveformCanvas
+            canvas#analyserCanvas.hidden
+            .timer-display#timerDisplay 00:00:00
+          
+          .audio-controls#recordingControls
+            button#recordBtn.control-btn.record-btn(type='button') 
+              i.fa.fa-microphone
+              |  Start Recording
+            button#pauseBtn.control-btn.pause-btn(type='button' disabled)
+              i.fa.fa-pause
+              |  Pause
+          
+          // Audio playback controls (shown after recording)
+          .audio-playback-section#audioPlaybackSection.hidden
+            .audio-player-container
+              audio#audioPlayback.audio-playback(controls style='width: 100%; margin: 10px 0;')
+            .seek-controls#seekControls
+              .seek-controls-wrapper
+                button.seek-btn#seekBack5(type='button')
+                  i.fa.fa-fast-backward
+                  |  5s
+                button.seek-btn#seekBack1(type='button')
+                  i.fa.fa-step-backward
+                  |  1s
+                button.seek-btn#seekForward1(type='button')
+                  |  1s
+                  i.fa.fa-step-forward
+                button.seek-btn#seekForward5(type='button')
+                  |  5s
+                  i.fa.fa-fast-forward
+          
+          .audio-controls
+            button#listenBtn.control-btn.listen-btn(type='button' disabled)
+              i.fa.fa-play
+              |  Listen Audio Once Before Submit
+            button#rerecordBtn.control-btn.rerecord-btn(type='button' disabled)
+              i.fa.fa-refresh
+              |  Re-record
+            button#submitBtn.control-btn.submit-btn(type='button' disabled)
+              i.fa.fa-upload
+              |  Submit
+
+  script.
+    // Initialize the enhanced medical recorder when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        window.medicalRecorder = new EnhancedMedicalRecorder();
+    });

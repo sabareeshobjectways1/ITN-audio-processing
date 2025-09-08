@@ -1,0 +1,58 @@
+// Audiomodels.js
+import mongoose from "mongoose";
+
+const audioSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  country: { type: String, required: true },
+  gender: { type: String, required: true },
+  audioData: { type: Buffer, required: true },
+  format_Id: { type: String , index: true},
+  jsonCountry: { type: String, required: true },
+  audioPath: { type: String, required: true },
+  age: { type: String },
+  speakerId: { type: String, index: true },
+  speed: { type: String },
+  text: { type: String },
+  validation_status: { type: Boolean, default: true },
+
+});
+
+// This function dynamically creates a model with collection name based on user name
+export const getAudioModelForUser = (userName) => {
+  const collectionName = userName.replace(/\s/g, '_'); // sanitize collection name
+  return mongoose.model(`AudioData_${collectionName}`, audioSchema, collectionName);
+};
+
+const AudioData = mongoose.model("AudioData", audioSchema);
+
+export default AudioData;
+
+
+
+
+
+
+const audioSchema = new mongoose.Schema({
+  speakerid: { type: String, index: true },
+  speakerId_sequence: { type: Number },
+  name: { type: String, required: true },
+  gender: { type: String, required: true },
+  age: { type: String },
+  country: { type: String, required: true },
+  speed: { type: String },
+  text: { type: String },
+  validation_status: { type: Boolean, default: false },
+  update: { type: Date, default: Date.now },
+  image_path: { type: String },
+  audioPath: { type: String },
+  analysis_results: {
+    drops: [{ type: String }],
+    drop_count: { type: Number },
+    is_clean: { type: Boolean },
+    max_sample: { type: Number },
+    min_sample: { type: Number },
+    bit_depth: { type: Number },
+    sample_rate: { type: Number },
+    duration: { type: Number },
+  },
+});

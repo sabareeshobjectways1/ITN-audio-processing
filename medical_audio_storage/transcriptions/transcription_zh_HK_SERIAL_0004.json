@@ -1,0 +1,4 @@
+{
+  "verbatim_transcription": "can you read the code on the back to me? it should start with two five lower case n e and then there should be six numbers.",
+  "itn_transcription": "can you read the code on the back to me? it should start with <ITN:NUM>2</ITN:NUM> <ITN:NUM>5</ITN:NUM> lowercase n e and then there should be <ITN:NUM>6</ITN:NUM> numbers."
+}

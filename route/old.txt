@@ -1,0 +1,206 @@
+// 
+// Hardcoded credentials
+// const users = {
+//   Templete: "templete@456",
+//   adminTemplete: "admintemplete@456",
+// };
+
+// // GET - Render login page
+// router.get("/", (req, res) => {
+//   res.render("login");
+// });
+
+// // POST - Handle login
+// router.post("/login", (req, res) => {
+//   const { username, password } = req.body;
+
+//   if (users[username] && users[username] === password) {
+//     req.session.user = username;
+
+//     if (username === "Templete") {
+//       return res.redirect("/index");
+//     } else if (username === "adminTemplete") {
+//       return res.redirect("/output");
+//     }
+//   } else {
+//     res.render("login", { error: "Invalid credentials. Try again." });
+//   }
+// });
+
+// // Middleware to protect routes
+// const authenticate = (req, res, next) => {
+//   if (!req.session.user) {
+//     return res.redirect("/");
+//   }
+//   next();
+// };
+
+// GET - Render index for normal user
+
+GET - Render output for admin
+// router.get("/output", authenticate, async (req, res) => {
+//   if (req.session.user === "adminTemplete") {
+//     try {
+//       const data = await AudioData.find();
+//       res.render("output", { data });
+//     } catch (err) {
+//       res.status(500).send("Error retrieving data: " + err.message);
+//     }
+//   } else {
+//     res.redirect("/");
+//   }
+// });
+
+// Route to download JSON data (only admin access)
+// router.get("/download", authenticate, async (req, res) => {
+//   if (req.session.user === "adminTemplete") {
+//     try {
+//       const data = await AudioData.find();
+//       const filePath = path.join("public", "data.json");
+//       fs.writeFileSync(filePath, JSON.stringify(data, null, 2));
+
+//       res.download(filePath, "data.json", (err) => {
+//         if (err) {
+//           console.error("Error downloading file:", err);
+//           res.status(500).send("Error downloading file");
+//         }
+//       });
+//     } catch (err) {
+//       res.status(500).send("Error processing download: " + err.message);
+//     }
+//   } else {
+//     res.redirect("/");
+//   }
+// });
+// Download Individual Audio
+// router.get("/audio/:id", async (req, res) => {
+//   try {
+//     const audio = await AudioData.findById(req.params.id);
+//     if (!audio || !audio.audioPath) {
+//       return res.status(404).send("Audio not found.");
+//     }
+//     res.sendFile(path.resolve(audio.audioPath));
+//   } catch (err) {
+//     res.status(500).send("Error retrieving audio.");
+//   }
+// });
+
+// Download Individual JSON
+// router.get("/download/json/:id", async (req, res) => {
+//   try {
+//     const audio = await AudioData.findById(req.params.id);
+//     if (!audio) {
+//       return res.status(404).send("Data not found.");
+//     }
+
+//     const jsonFilePath = path.join("public", `data_${audio._id}.json`);
+//     fs.writeFileSync(jsonFilePath, JSON.stringify(audio, null, 2));
+
+//     res.download(jsonFilePath, `data_${audio._id}.json`, (err) => {
+//       if (err) {
+//         console.error("Error downloading JSON:", err);
+//         res.status(500).send("Error downloading JSON");
+//       } else {
+//         fs.unlinkSync(jsonFilePath); // Cleanup after download
+//       }
+//     });
+//   } catch (err) {
+//     res.status(500).send("Error processing download.");
+//   }
+// });
+
+// // Download All JSON Data
+// router.get("/download/all/json", async (req, res) => {
+//   try {
+//     const data = await AudioData.find();
+//     const jsonFilePath = path.join("public", "all_data.json");
+//     fs.writeFileSync(jsonFilePath, JSON.stringify(data, null, 2));
+
+//     res.download(jsonFilePath, "all_data.json", (err) => {
+//       if (err) {
+//         console.error("Error downloading JSON:", err);
+//       }
+//       fs.unlinkSync(jsonFilePath); // Cleanup
+//     });
+//   } catch (err) {
+//     res.status(500).send("Error processing JSON download.");
+//   }
+// });
+
+// // Download All Audio Files
+// router.get("/download/all/audio", async (req, res) => {
+//   try {
+//     const data = await AudioData.find();
+//     const zip = require("archiver")("zip");
+//     const zipPath = path.join("public", "all_audio.zip");
+//     const output = fs.createWriteStream(zipPath);
+
+//     const archive = zip;
+//     archive.pipe(output);
+
+//     data.forEach((audio) => {
+//       if (audio.audioPath) {
+//         archive.file(audio.audioPath, { name: `audio_${audio._id}.wav` });
+//       }
+//     });
+
+//     archive.finalize();
+
+//     output.on("close", () => {
+//       res.download(zipPath, "all_audio.zip", (err) => {
+//         if (err) {
+//           console.error("Error downloading audio files:", err);
+//         }
+//         fs.unlinkSync(zipPath); // Cleanup
+//       });
+//     });
+//   } catch (err) {
+//     res.status(500).send("Error processing audio download.");
+//   }
+// });
+// // Route to upload audio
+// router.post("/audio_upload", async (req, res) => {
+//   try {
+//     const { name, country, gender, audioData } = req.body; // Destructure expected fields
+//     if (!audioData) { // Check if audioData is present
+//       return res.status(400).send("No audio data provided."); // Return 400 if missing
+//     }
+
+//     // Create audio directory if it doesn't exist
+//     const audioDir = path.join("public", "audio");
+
+//     if (!fs.existsSync(audioDir)) {
+//       fs.mkdirSync(audioDir, { recursive: true });
+//     }
+
+//     // Save audio file in /public/audio/
+//     const audioBuffer = Buffer.from(audioData, "base64");
+//     const audioPath = path.join(audioDir, `${Date.now()}.wav`);
+
+//     // Write the audio data to the file
+//     fs.writeFileSync(audioPath, audioBuffer);
+
+//     // Save metadata to MongoDB
+//     const newAudio = new AudioData({
+//       name,
+//       country,
+//       gender,
+//       audioPath,
+//     });
+
+//     await newAudio.save();
+//     res.status(201).send("Audio data uploaded successfully!");
+//   } catch (err) {
+//     console.error("Error uploading audio:", err);
+//     res.status(500).send("Error uploading audio.");
+//   }
+// });
+
+
+
+// // Logout Route
+// router.get("/logout", (req, res) => {
+//   req.session.destroy(() => {
+//     res.redirect("/");
+//   });
+// });

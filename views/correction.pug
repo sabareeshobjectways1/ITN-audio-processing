@@ -1,0 +1,371 @@
+doctype html
+head
+  meta(name='viewport' content='width=device-width,initial-scale=1')
+  title Audio Recorder
+  script(src='https://code.jquery.com/jquery-3.4.1.min.js' integrity='sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=' crossorigin='anonymous')
+  link(rel='stylesheet' href='https://code.jquery.com/ui/1.12.0/themes/smoothness/jquery-ui.css')
+  link(rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css')
+  link(rel='stylesheet' href='https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css' integrity='sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh' crossorigin='anonymous')
+  script(src='https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js' integrity='sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo' crossorigin='anonymous')
+  script(src='https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js' integrity='sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6' crossorigin='anonymous')
+  script(src='duplicateFunction/audiodisplay.js')
+  script(src='duplicateFunction/recorderjs/recorder.js')
+  script(src='duplicateFunction/new1.js')
+  style.
+    canvas {
+    display: inline-block;
+    background: #cccccc;
+    width: 100%;
+    height: 100px;
+    }
+    #controls {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-around;
+    height: 20%;
+    width: 100%;
+    }
+    .audio {
+    width: 100%;
+    }
+    .hidden {
+    display: none;
+    }
+    #title
+    {
+    font-size: 14px;
+    color: #777;
+    }
+    #texttorec
+    {
+    border: 1px solid #cccccc;
+    padding: 20px;
+    font-size: 26px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    }
+    #save{
+    float: right
+    }
+    #alert{
+    border-color: #d38e8e;
+    background-color: #fff0f2;
+    line-height: 1.6;
+    }
+    #done
+    {
+    font-size: 30px;
+    line-height: 150px;
+    text-align: center;
+    color: #444;
+    }
+    #timer {
+    font-size: 20px;
+    color: #333;
+    margin-top: 10px;
+    text-align: center;
+    }
+#mymodal.modal(tabindex='-1' role='dialog')
+  .modal-dialog(role='document')
+    .modal-content
+      .modal-header
+        h5.modal-title Modal title
+        button.close(type='button' data-dismiss='modal' aria-label='Close')
+          span(aria-hidden='true') &times;
+      .modal-body
+        p Modal body text goes here.
+      .modal-footer
+        button.btn.btn-primary(type='button') Save changes
+        button.btn.btn-secondary(type='button' data-dismiss='modal') Close
+main(role='main')
+  .container-fluid 
+    .row
+      .col-3.ctrlpanel.hhidden-xs
+        | Please complete your info:
+        form
+          .form-group
+            label(for='userId') Speaker Id
+            input#userId.form-control(type='text' aria-describedby='Enter your speaker id' placeholder='Enter your speaker id')
+          .form-group
+            label(for='userId') Sequence Id
+            input#userSId.form-control(type='text' aria-describedby='Enter your speaker id' placeholder='Enter your speaker id')
+          .form-group
+            label(for='userName') Name
+            input#userName.form-control(type='text' aria-describedby='Enter your name' placeholder='Enter your name')
+          .form-group
+            label(for='userGender') Gender
+            select#userGender.form-control
+              option
+              option Male
+              option Female
+          .form-group
+            label(for='userAge') Age
+            input#userAge.form-control(type='number' aria-describedby='Enter your age' placeholder='Enter your age')
+          .form-group
+            label(for='userCountry') Country 
+            select#userCountry.form-control
+              option
+              option US
+              option UK
+              option Canada
+              option Australia
+              option India
+          .form-group
+            label(for='WakeWord') Wake word
+            select#WakeWord.form-control
+              option(value='')
+              option(value='1') Hey Anka
+              option(value='7') Hi Anka
+              option(value='13') Previous Track
+              option(value='19') Next Track
+              option(value='25') Increase Volume
+              option(value='31') Decrease Volume
+              option(value='37') Start Playing
+              option(value='43') Resume Playing
+              option(value='49') Pause Audio
+              option(value='55') ANC Mode
+              option(value='61') Transparent Mode
+              option(value='67') Adaptive Mode
+              option(value='73') Answer Call
+              option(value='79') Reject Call
+              option(value='85') Start Translation
+              option(value='91') Hey Siri
+          .form-group
+            label(for='Speed') Speed
+            select#Speed.form-control
+              option(value='')
+              option(value='1') comfortable_slow
+              option(value='2') comfortable_normal
+              option(value='3') comfortable_fast
+              option(value='4')  soft_slow
+              option(value='5')  soft_normal
+              option(value='6') soft_fast
+        button#clearAllData.btn.btn-danger Reset
+      .col-6.imgdisplay
+        #title
+        #subtitle
+        #texttorec
+        #done.hidden Thank you!
+        canvas#analyser.hidden
+        canvas#wavedisplay.hidden
+        #media
+        #timer.hidden 00:00
+        audio#audioPlayback.hidden(controls='')
+        button#record.btn.btn-primary(type='button' onclick='toggleRecording(this);') Start Recording
+        button#save.btn.btn-info.hidden(type='button' onclick='sendAudio()') Send Audio
+        br
+        br
+        #alert.alert.mt-3.p-3.position-relative(role='alert')
+          .d-flex.align-items-start
+            div
+              h6.fw-semibold
+                svg.bi.bi-exclamation-triangle.me-2.mb-2(xmlns='http://www.w3.org/2000/svg' width='15' height='15' fill='red' stroke='red' stroke-width='0.5' viewbox='0 0 16 16')
+                  path(d='M7.938 2.016A.13.13 0 0 1 8.002 2a.13.13 0 0 1 .063.016.146.146 0 0 1 .054.057l6.857 11.667c.036.06.035.124.002.183a.163.163 0 0 1-.054.06.116.116 0 0 1-.066.017H1.146a.115.115 0 0 1-.066-.017.163.163 0 0 1-.054-.06.176.176 0 0 1 .002-.183L7.884 2.073a.147.147 0 0 1 .054-.057zm1.044-.45a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566z')
+                  path(d='M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995z')
+                path(d='M7.002 12a1 1 0 1 1 2 0 1 1 0 0 1-2 0zM7.1 5.995a.905.905 0 1 1 1.8 0l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995z')
+                |                               Important
+              p#alert.mb-0.px-3
+                b.text-danger.px-1 Mandatory Notice:
+                |  Using earphones and recording in a noise-free environment  mandatory to ensure clear and high-quality audio,Please follow this requirement strictly.
+      .col-3.ctrlpanel.hhidden-xs
+        div
+          h2 Instruction
+          // <p>sample</p>
+          // Sample Audio Files
+          h5.mb-3 Sample Audio Files
+          div
+            p Reading Fast
+            audio(controls='')
+              source(src='https://objectways-audio.s3.amazonaws.com/sample/G0001_S0001_fast_male.wav' type='audio/mpeg')
+              | &#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;Your browser does not support the audio element.
+          div
+            p Reading Normal 
+            audio(controls='')
+              source(src='https://objectways-audio.s3.amazonaws.com/sample/G0001_S0004_normal_male.wav' type='audio/mpeg')
+              | &#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;Your browser does not support the audio element.
+          div
+            p Reading Slow 
+            audio(controls='')
+              source(src='https://objectways-audio.s3.amazonaws.com/sample/G0001_S0007_slow_male.wav' type='audio/mpeg')
+              | &#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;Your browser does not support the audio element.
+          div
+            p Reading Comfortable 
+            audio(controls='')
+              source(src='https://objectways-audio.s3.us-east-1.amazonaws.com/sample/comfortable_volume_01.wav' type='audio/mpeg')
+              | &#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;Your browser does not support the audio element.
+            p Reading Soft 
+            audio(controls='')
+              source(src='https://objectways-audio.s3.us-east-1.amazonaws.com/sample/soft_volume_01.wav' type='audio/mpeg')
+              | &#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;&#x9;Your browser does not support the audio element.
+            button#saved.btn.btn-info(type='button' onclick='Audioed()') Final submission
+script.
+  function getSelectedOptionId() {
+  var selectElement = document.getElementById("WakeWord");
+  var selectedOption = selectElement.options[selectElement.selectedIndex];
+  var abc = selectedOption.id;
+  }
+  function getSelectedOptionId() {
+  var selectElement = document.getElementById("Speed");
+  var selectedOption = selectElement.options[selectElement.selectedIndex];
+  var abc = selectedOption.id;
+  }
+  // var texts = [
+  // {id:16, text: "Others have tried to explain the phenomenon physically. "},
+  // {id:17, text: "Aristotle thought that the rainbow was caused by reflection of the sun's rays by the rain. "},
+  // {id:18, text: "Aristotle thought that the rainbow was caused by reflection of the sun's rays by the rain. "},
+  // {id:19, text: "Since then physicists have found that it is not reflection, but refraction by the raindrops which causes the rainbows. "},
+  // ];
+  var texts =[{
+  id: 1,
+  comfortable_slow: "Hey Anka",
+  comfortable_normal: "Hey Anka",
+  comfortable_fast: "Hey Anka",
+  soft_slow: "Hey Anka",
+  soft_normal: "Hey Anka",
+  soft_fast: "Hey Anka",
+  },
+  {
+  id: 2,
+  comfortable_slow: "Previous Track",
+  comfortable_normal: "Previous Track",
+  comfortable_fast: "Previous Track",
+  soft_slow: "Previous Track",
+  soft_normal: "Previous Track",
+  soft_fast: "Previous Track",
+  },
+  {
+  id: 3,
+  comfortable_slow: "Next Track",
+  comfortable_normal: "Next Track",
+  comfortable_fast: "Next Track",
+  soft_slow: "Next Track",
+  soft_normal: "Next Track",
+  soft_fast: "Next Track",
+  },
+  {
+  id: 4,
+  comfortable_slow: "Increase Volume",
+  comfortable_normal: "Increase Volume",
+  comfortable_fast: "Increase Volume",
+  soft_slow: "Increase Volume",
+  soft_normal: "Increase Volume",
+  soft_fast: "Increase Volume",
+  },
+  {
+  id: 5,
+  comfortable_slow: "Decrease Volume",
+  comfortable_normal: "Decrease Volume",
+  comfortable_fast: "Decrease Volume",
+  soft_slow: "Decrease Volume",
+  soft_normal: "Decrease Volume",
+  soft_fast: "Decrease Volume",
+  },
+  {
+  id: 6,
+  comfortable_slow: "Start Playing",
+  comfortable_normal: "Start Playing",
+  comfortable_fast: "Start Playing",
+  soft_slow: "Start Playing",
+  soft_normal: "Start Playing",
+  soft_fast: "Start Playing",
+  },
+  {
+  id: 7,
+  comfortable_slow: "Resume Playing",
+  comfortable_normal: "Resume Playing",
+  comfortable_fast: "Resume Playing",
+  soft_slow: "Resume Playing",
+  soft_normal: "Resume Playing",
+  soft_fast: "Resume Playing",
+  },
+  {
+  id: 8,
+  comfortable_slow: "Pause Audio",
+  comfortable_normal: "Pause Audio",
+  comfortable_fast: "Pause Audio",
+  soft_slow: "Pause Audio",
+  soft_normal: "Pause Audio",
+  soft_fast: "Pause Audio",
+  },
+  {
+  id: 9,
+  comfortable_slow: "ANC Mode",
+  comfortable_normal: "ANC Mode",
+  comfortable_fast: "ANC Mode",
+  soft_slow: "ANC Mode",
+  soft_normal: "ANC Mode",
+  soft_fast: "ANC Mode",
+  },
+  {
+  id: 10,
+  comfortable_slow: "Transparent Mode",
+  comfortable_normal: "Transparent Mode",
+  comfortable_fast: "Transparent Mode",
+  soft_slow: "Transparent Mode",
+  soft_normal: "Transparent Mode",
+  soft_fast: "Transparent Mode",
+  },
+  {
+  id: 11,
+  comfortable_slow: "Adaptive Mode",
+  comfortable_normal: "Adaptive Mode",
+  comfortable_fast: "Adaptive Mode",
+  soft_slow: "Adaptive Mode",
+  soft_normal: "Adaptive Mode",
+  soft_fast: "Adaptive Mode",
+  },
+  {
+  id: 12,
+  comfortable_slow: "Answer Call",
+  comfortable_normal: "Answer Call",
+  comfortable_fast: "Answer Call",
+  soft_slow: "Answer Call",
+  soft_normal: "Answer Call",
+  soft_fast: "Answer Call",
+  },
+  {
+  id: 13,
+  comfortable_slow: "End Call",
+  comfortable_normal: "End Call",
+  comfortable_fast: "End Call",
+  soft_slow: "End Call",
+  soft_normal: "End Call",
+  soft_fast: "End Call",
+  },
+  {
+  id: 14,
+  comfortable_slow: "Start Translation",
+  comfortable_normal: "Start Translation",
+  comfortable_fast: "Start Translation",
+  soft_slow: "Start Translation",
+  soft_normal: "Start Translation",
+  soft_fast: "Start Translation",
+  },
+  {
+  id: 15,
+  comfortable_slow: "Start Recording",
+  comfortable_normal: "Start Recording",
+  comfortable_fast: "Start Recording",
+  soft_slow: "Start Recording",
+  soft_normal: "Start Recording",
+  soft_fast: "Start Recording",
+  },
+  {
+  id: 16,
+  comfortable_slow: "End Recording",
+  comfortable_normal: "End Recording",
+  comfortable_fast: "End Recording",
+  soft_slow: "End Recording",
+  soft_normal: "End Recording",
+  soft_fast: "End Recording",
+  }]
+  console.log(texts.length);
+  var idLength = texts;
+  console.log(",,,,,,,,,,,,,,,,,,,,,",idLength);
+  // Loop texts array three times
+  console.log("...............",texts);
+  texts = texts.concat(texts,idLength);
+  console.log("...............",texts);
+  nextAudio();

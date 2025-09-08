@@ -1,0 +1,10 @@
+.env
+output/
+public/audio
+tmp_email/
+../backup/
+node_modules/
+public/audio-Brocolli
+tmp_email/
+reports/
+venv/

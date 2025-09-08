@@ -1,0 +1,11 @@
+{
+  "speaker_age": 31,
+  "speaker_gender": "Male",
+  "speaker_nationality": "Hong Kong",
+  "speaker_known_languages": [
+    "zh-HK"
+  ],
+  "language_info_accent": "zh-HK",
+  "language_locale": "Hong Kong",
+  "loudness_level": "Normal"
+}

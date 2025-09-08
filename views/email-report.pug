@@ -1,0 +1,20 @@
+//- doctype html
+//- html
+//-   head
+//-     title Test Email Report
+//-   body
+//-     h1 Test Email Report Trigger
+//-     form(action="/test-email-report" method="get")
+//-       button(type="submit") Send Test Email Report
+doctype html
+html
+  head
+    title Manual Email Report
+  body
+    h1 Manual Email Trigger
+    if status
+      p(style="color: green")= status
+    form(action="/test-email-report", method="get")
+      button(type="submit") Send Daily Report Email
+    br
+    a(href="/") Back to Home
